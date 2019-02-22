@@ -5,16 +5,16 @@ import com.lambdaschool.javatodos.models.Users;
 import com.lambdaschool.javatodos.repository.TodoRepository;
 import com.lambdaschool.javatodos.repository.UsersRepository;
 import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
+import java.net.URISyntaxException;
 import java.util.List;
+import java.util.Optional;
 
 @Api(value = "Todo List Application", description = "An application for tracking a todo list")
 @RestController
@@ -41,34 +41,12 @@ public class TodolistController
         return usersrepo.findAll();
     }
 
+    @ApiOperation(value = "Returns all todos", response = Todo.class)
     @GetMapping("/todos")
     public List<Todo> allTodos()
     {
         return todorepo.findAll();
     }
-/*
-    GET /users/userid/{userid} - return the user based off of the user id
-
-    GET /users/username/{username} - return the user based off of the user name
-
-    GET /todos/todoid/{todoid} - return the todo based off of the todo id
-
-    GET /todos/users - return a listing of the todos with its assigned user's name
-
-    GET /todos/active - return a listing of the todos not yet completed.
-
-    POST /users - adds a user
-
-    POST /todos - adds a todo
-
-    PUT /users/userid/{userid} - updates a user based on userid
-
-    PUT /todos/todoid/{todoid} - updates a todo based on todoid
-
-    DELETE /users/userid/{userid} - Deletes a user based off of their userid and deletes all their associated todos
-
-    DELETE /todos/todoid/{todoid} - deletes a todo based off its todoid
-    */
 
     @GetMapping("/user/userid/{userid}")
     public Users findUserById(@PathVariable int id)
@@ -102,4 +80,85 @@ public class TodolistController
             return null;
         }
     }
+
+    @GetMapping("/todos/users")
+    public List<Object[]> getTodosAndUsers()
+    {
+        return todorepo.todosWithUsers();
+    }
+
+    @GetMapping("/todos/active")
+    public List<Todo> getActiveTodos()
+    {
+        return todorepo.activeTodos();
+    }
+
+    @PostMapping("/users")
+    public Users newUser(@RequestBody Users user) throws URISyntaxException
+    {
+        return usersrepo.save(user);
+    }
+
+    @PostMapping("/todos")
+    public Todo newTodo(@RequestBody Todo todo) throws URISyntaxException
+    {
+        return todorepo.save(todo);
+    }
+
+    @PutMapping("/users/userid/{userid}")
+    public Users changeUser(@RequestBody Users newUser, @PathVariable int id) throws URISyntaxException
+    {
+        Optional<Users> updateUser = usersrepo.findById(id);
+        if (updateUser.isPresent()) {
+            newUser.setUserid(id);
+            usersrepo.save(newUser);
+            return newUser;
+        } else {
+            return null;
+        }
+    }
+
+    @PutMapping("/todos/todoid/{todoid}")
+    public Todo changeTodo(@RequestBody Todo newTodo, @PathVariable int id) throws URISyntaxException
+    {
+        Optional<Todo> updateTodo = todorepo.findById(id);
+        if (updateTodo.isPresent()) {
+            newTodo.setTodoid(id);
+            todorepo.save(newTodo);
+            return newTodo;
+        } else {
+            return null;
+        }
+    }
+
+    @DeleteMapping("/users/userid/{userid}")
+    public Users deleteUser(@PathVariable int userid)
+    {
+        var foundUser = usersrepo.findById(userid);
+        if (foundUser.isPresent())
+        {
+            usersrepo.deleteById(userid);
+            return foundUser.get();
+        }
+        else
+        {
+            return null;
+        }
+    }
+
+    @DeleteMapping("/todos/todoid/{todoid}")
+    public Todo deleteTodo(@PathVariable int todoid)
+    {
+        var foundTodo = todorepo.findById(todoid);
+        if (foundTodo.isPresent())
+        {
+            todorepo.deleteById(todoid);
+            return foundTodo.get();
+        }
+        else
+        {
+            return null;
+        }
+    }
+
 }
