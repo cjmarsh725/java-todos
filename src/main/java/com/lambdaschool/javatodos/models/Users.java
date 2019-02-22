@@ -2,6 +2,8 @@ package com.lambdaschool.javatodos.models;
 
 import javax.persistence.*;
 
+@Entity
+@Table(name="users")
 public class Users
 {
     @Id
